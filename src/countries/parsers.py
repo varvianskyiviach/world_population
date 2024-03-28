@@ -17,7 +17,7 @@ class ParserInterface(ABC):
         pass
 
     @abstractmethod
-    def get_all_data(self) -> List[CountryInfo]:
+    async def get_all_data(self) -> List[CountryInfo]:
         pass
 
 
