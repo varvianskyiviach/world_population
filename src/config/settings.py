@@ -23,9 +23,7 @@ TABLE_NAME = f"countries_{os.getenv('SOURCE', default='')}"
 # ====================
 # parser configuration
 # ====================
-PARSERS_MAPPING = {
-    "wikipedia": "ParserWiki",
-}
+PARSERS_MAPPING = {"wikipedia": "ParserWiki", "geonames": "GeonamesAPI"}
 
 HEADERS = {
     "User-Agent": (

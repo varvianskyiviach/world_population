@@ -1,19 +1,19 @@
 import json
 from abc import ABC, abstractmethod
 from difflib import SequenceMatcher
-from typing import List
+from typing import Any, Coroutine, List
 
 import aiofiles
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup
 
-from config.settings import FILE_JSON_PATH, HEADERS
+from config.settings import API_URL, FILE_JSON_PATH, HEADERS, PARAMS
 from countries.models import CountryInfo
 
 
 class ParserInterface(ABC):
     @abstractmethod
-    async def extract_data(self) -> List[dict]:
+    async def extract_data(self) -> Coroutine[Any, Any, List[dict]]:
         pass
 
     @abstractmethod
@@ -29,7 +29,7 @@ class ParserWiki(ParserInterface):
     def similar(a: str, b: str) -> float:
         return SequenceMatcher(None, a, b).ratio()
 
-    async def extract_data(self) -> List[dict]:
+    async def extract_data(self) -> Coroutine[Any, Any, List[dict]]:
         async with ClientSession() as session:
             async with session.get(url=self.URL, headers=HEADERS) as responce:
                 html_content = await responce.text()
@@ -105,5 +105,33 @@ class ParserWiki(ParserInterface):
                     main_data["region"] = data["region"]
 
                     results.append(CountryInfo(**main_data))
+
+        return results
+
+
+class GeonamesAPI(ParserInterface):
+    URL = API_URL
+    PARAMS = PARAMS
+
+    async def extract_data(self) -> Coroutine[Any, Any, List[dict]]:
+        async with ClientSession() as session:
+            async with session.get(self.URL, params=self.PARAMS) as responce:
+
+                row_data = await responce.json()
+
+            return row_data
+
+    async def get_all_data(self) -> List[CountryInfo]:
+        row_data: json = await self.extract_data()
+        row_data: List[dict] = row_data.get("geonames")
+
+        results: List[CountryInfo] = []
+        for result in row_data:
+            data: dict = {}
+            data["country_name"] = result["countryName"]
+            data["population"] = result["population"]
+            data["region"] = result["continentName"]
+
+            results.append(CountryInfo(**data))
 
         return results
