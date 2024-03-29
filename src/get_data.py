@@ -2,14 +2,24 @@ import asyncio
 import os
 from typing import List
 
-from config.settings import PARSERS_MAPPING
+from config.settings import DSN, PARSERS_MAPPING
 from countries.models import CountryInfo
+from countries.parsers import ParserWiki  # noqa: F401, F403
+from countries.repository import CountriesCRUD
 
 
 async def get_data(parser) -> List[CountryInfo]:
     result: List[CountryInfo] = await parser.get_all_data()
-    print(result)
+
     return result
+
+
+async def save_in_db(countries):
+    db_manager = CountriesCRUD(dsn=DSN)
+
+    await db_manager.connect()
+    await db_manager.save(countries)
+    await db_manager.close()
 
 
 async def main():
@@ -19,22 +29,11 @@ async def main():
         parser_class = globals()[parser_name]
         parser = parser_class()
         result = await get_data(parser)
-        return result
     except KeyError:
         print(f"Parser '{source}' has not been found! Make sure you have created parser and added in PARSERS_MAPPING")
         return None
 
+    await save_in_db(countries=result)
+
 
 asyncio.run(main())
-
-
-# async def save_in_db(countries):
-
-#     db_manager = CountriesCRUD(dsn=DSN)
-
-#     await db_manager.connect()
-#     await db_manager.save(countries)
-#     await db_manager.close()
-
-
-# asyncio.run(save_in_db(countries=result))

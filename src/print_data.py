@@ -1,20 +1,15 @@
 import asyncio
-import time
 
 from config.settings import DSN
-from database.session import DataBaseManager
+from countries.repository import CountriesCRUD
 
 
 async def main():
-    db_manager = DataBaseManager(DSN)
-    await db_manager.connect()
-    start = time.time()
-    await db_manager.extract_dates()
-    end = time.time()
-    execution_time = end - start
-    await db_manager.close()
+    db_manager = CountriesCRUD(DSN)
 
-    print(execution_time)
+    await db_manager.connect()
+    await db_manager.list()
+    await db_manager.close()
 
 
 asyncio.run(main())

@@ -15,7 +15,7 @@ POSTGRES_PORT = os.getenv("POSTGRES_PORT", default=5432)
 POSTGRES_USER = os.getenv("POSTGRES_USER", default="postgres")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", default="postgres")
 
-DSN = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}/world_population"
+DSN = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}/{POSTGRES_NAME}"
 
 TABLE_NAME = f"countries_{os.getenv('SOURCE', default='')}"
 

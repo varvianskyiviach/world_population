@@ -1,9 +1,10 @@
 from typing import List
 
-from countries.models import CountryInfo
-from database.session import Session
+from asyncpg.exceptions import UniqueViolationError
 
-from .constant import QUERY_FETCH, QUERY_LOAD
+from countries.constant import QUERY_FETCH, QUERY_LOAD
+from countries.models import CountryInfo, RegionInfo
+from database.session import Session
 
 
 class CountriesCRUD(Session):
@@ -12,19 +13,26 @@ class CountriesCRUD(Session):
 
     async def save(self, countries: List[CountryInfo]) -> None:
         async with self.pool.acquire() as connection:
-            async with connection.transaction():
-                for country in countries:
+            for country in countries:
+                try:
                     await connection.execute(
                         QUERY_LOAD,
                         country.country_name,
                         country.population,
                         country.region,
                     )
+                    print(f"{country.country_name} has been saved in database\n")
+                except UniqueViolationError as e:
+                    print(f"{e}")
 
-    async def get(self) -> dict:
+    async def list(self):
         async with self.pool.acquire() as connection:
-            async with connection.transaction():
-                results = await connection.fetch(QUERY_FETCH)
-            for row in results:
-                processing_row = dict(row)
-                print(processing_row)
+
+            results = await connection.fetch(QUERY_FETCH)
+            regions: List[RegionInfo] = []
+            for result in results:
+                data = dict(result)
+                regions.append(RegionInfo(**data))
+
+            for region in regions:
+                print(region.repr())
