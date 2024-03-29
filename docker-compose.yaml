@@ -14,7 +14,6 @@ services:
       context: .
       dockerfile: Dockerfile
     command: python3 src/get_data.py
-    image: world_population
     container_name: get_data_app
     env_file: '.env'
     depends_on: 
@@ -27,7 +26,6 @@ services:
       context: .
       dockerfile: Dockerfile
     command: python3 src/print_data.py
-    image: world_population
     container_name: print_data_app
     env_file: '.env'
     depends_on: 
