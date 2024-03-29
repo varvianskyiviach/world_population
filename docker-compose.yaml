@@ -7,18 +7,21 @@ services:
     ports:
       - 5432:5432
     volumes:
+      - init.sql:/docker-entrypoint-initdb.d/init.sql
       - pg_data:/var/lib/postgresql/data
 
   get_data:
     build:
       context: .
-    command: python3 src/script/script_table_name.py
-    image: world_population
+      dockerfile: Dockerfile
+    command: python3 src/countries/get_data.py
     container_name: get_data_app
     env_file: '.env'
     depends_on: 
+      - postgres
+    volumes:
+      - .:/app
 
-
-      - inint.sql:/docker-entrypoint-initdb.d/init.sql
 volumes:
+  init.sql:
   pg_data:

@@ -23,9 +23,8 @@ TABLE_NAME = f"countries_{os.getenv('SOURCE', default='')}"
 # ====================
 # parser configuration
 # ====================
-# url
-URL_MAPPING: dict = {
-    "wikipedia": "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_population",
+PARSERS_MAPPING = {
+    "wikipedia": "ParserWiki",
 }
 
 HEADERS = {
