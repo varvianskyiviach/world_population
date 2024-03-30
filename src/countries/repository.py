@@ -1,8 +1,8 @@
 from typing import List
 
-from asyncpg.exceptions import UniqueViolationError
+from asyncpg.exceptions import UndefinedTableError, UniqueViolationError
 
-from countries.constant import QUERY_FETCH, QUERY_LOAD
+from countries.constant import QUERY_FETCH, QUERY_LOAD, TABLE_NAME
 from countries.models import CountryInfo, RegionInfo
 from database.session import Session
 
@@ -27,12 +27,14 @@ class CountriesCRUD(Session):
 
     async def list(self):
         async with self.pool.acquire() as connection:
+            try:
+                results = await connection.fetch(QUERY_FETCH)
+                regions: List[RegionInfo] = []
+                for result in results:
+                    data = dict(result)
+                    regions.append(RegionInfo(**data))
 
-            results = await connection.fetch(QUERY_FETCH)
-            regions: List[RegionInfo] = []
-            for result in results:
-                data = dict(result)
-                regions.append(RegionInfo(**data))
-
-            for region in regions:
-                print(region.repr())
+                for region in regions:
+                    print(region.repr())
+            except UndefinedTableError:
+                print(f"Table '{TABLE_NAME}' does not exist. First you should get data, run get_data conteiner!")

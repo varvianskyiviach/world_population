@@ -4,7 +4,11 @@ from typing import List
 
 from config.settings import DSN, PARSERS_MAPPING
 from countries.models import CountryInfo
-from countries.parsers import GeonamesAPI, ParserWiki  # noqa: F401, F403
+from countries.parsers import (  # noqa: F401, F403
+    GeonamesAPI,
+    ParserWiki,
+    StatisticsTimes,
+)
 from countries.repository import CountriesCRUD
 from database.service import Service
 

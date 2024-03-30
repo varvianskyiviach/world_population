@@ -19,11 +19,10 @@ DSN = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}/{POSTGR
 
 TABLE_NAME = f"countries_{os.getenv('SOURCE', default='')}"
 
-
 # ====================
 # parser configuration
 # ====================
-PARSERS_MAPPING = {"wikipedia": "ParserWiki", "geonames": "GeonamesAPI"}
+PARSERS_MAPPING = {"wikipedia": "ParserWiki", "geonames": "GeonamesAPI", "statisticstimes": "StatisticsTimes"}
 
 HEADERS = {
     "User-Agent": (
