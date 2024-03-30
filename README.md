@@ -38,7 +38,7 @@ docker compose up print_data
 ```
 ### <span style='color:yellow'>Adding a New Source</span>
 ```bash
-# If you want to add a new source, create a parser`s class with your parser in the `src/countries/parsers` file and add name of class to the file `settings` and variables for parser to the `.env` file.
+If you want to add a new source, create a parser`s class with your parser in the `src/countries/parsers` file and add name of class to the file `settings` and variables for parser to the `.env` file.
 
 example:
 
@@ -51,7 +51,7 @@ PARSERS_MAPPING = {
     "wikipedia": "ParserWiki",
     ...
 }
-# In the file get_data.py in import add paasrer`s class
+In the file get_data.py in import add paasrer`s class
 
 from countries.parsers import ParserWiki..., "NewParserClass"
 ```
