@@ -9,12 +9,13 @@ class Service(Session):
         super().__init__(dsn)
 
     async def create_table(self) -> None:
-        async with self.pool.acquire() as connection:
-            create_table_query = f"""
-                CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
-                    id SERIAL PRIMARY KEY,
-                    country_name VARCHAR(255) UNIQUE NOT NULL,
-                    population INTEGER NOT NULL,
-                    region VARCHAR(255) NOT NULL
-                );"""
-            await connection.execute(create_table_query)
+        if self.pool is not None:
+            async with self.pool.acquire() as connection:
+                create_table_query = f"""
+                    CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
+                        id SERIAL PRIMARY KEY,
+                        country_name VARCHAR(255) UNIQUE NOT NULL,
+                        population INTEGER NOT NULL,
+                        region VARCHAR(255) NOT NULL
+                    );"""
+                await connection.execute(create_table_query)

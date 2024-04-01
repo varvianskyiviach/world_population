@@ -18,3 +18,5 @@ jobs:
       run: flake8 .
     - name: Run formatters
       run: black --check . && isort --check .
+    - name: Run mypy
+      run: mypy .

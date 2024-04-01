@@ -1,7 +1,8 @@
 import json
 from abc import ABC, abstractmethod
 from difflib import SequenceMatcher
-from typing import Any, Coroutine, List
+from pathlib import Path
+from typing import List
 
 import aiofiles
 from aiohttp import ClientSession
@@ -13,7 +14,7 @@ from countries.models import CountryInfo
 
 class ParserInterface(ABC):
     @abstractmethod
-    async def extract_data(self) -> Coroutine[Any, Any, List[dict]]:
+    async def extract_data(self) -> List[dict]:
         pass
 
     @abstractmethod
@@ -28,7 +29,7 @@ class ParserWiki(ParserInterface):
     def similar(self, a: str, b: str) -> float:
         return SequenceMatcher(None, a, b).ratio()
 
-    async def extract_data(self) -> Coroutine[Any, Any, List[dict]]:
+    async def extract_data(self) -> List[dict]:
         async with ClientSession() as session:
             async with session.get(url=self.URL, headers=HEADERS) as responce:
                 html_content = await responce.text()
@@ -64,12 +65,11 @@ class ParserWiki(ParserInterface):
 
                 return web_data
 
-    async def extract_data_additional(self, filepath: str, web_data: List[dict]) -> List[dict]:
+    async def extract_data_additional(self, filepath: Path, web_data: List[dict]) -> List[dict]:
 
         async with aiofiles.open(f"{filepath}", mode="r") as file:
             contents = await file.read()
-            file_data: dict = json.loads(contents)
-            file_data: list[dict] = file_data.get("geonames")
+            file_data: List[dict] = json.loads(contents).get("geonames")
 
             additional_data: list[dict] = []
             for base_country in web_data:
@@ -89,8 +89,8 @@ class ParserWiki(ParserInterface):
 
     async def get_all_data(self) -> List[CountryInfo]:
 
-        web_data: Coroutine[Any, Any, List[dict]] = await self.extract_data()
-        additional_data: Coroutine[Any, Any, List[dict]] = await self.extract_data_additional(
+        web_data: List[dict] = await self.extract_data()
+        additional_data: List[dict] = await self.extract_data_additional(
             filepath=self.FILEPATH,
             web_data=web_data,
         )
@@ -111,28 +111,28 @@ class GeonamesAPI(ParserInterface):
     URL = API_URL
     PARAMS = PARAMS
 
-    async def extract_data(self) -> Coroutine[Any, Any, List[dict]]:
+    async def extract_data(self) -> List[dict]:
         async with ClientSession() as session:
             async with session.get(self.URL, params=self.PARAMS) as responce:
 
-                row_data: json = await responce.json()
-                row_data: List[dict] = row_data.get("geonames")
+                row_data: dict = await responce.json()
+                countries_info: List[dict] = row_data.get("geonames", [])
 
                 web_data: list[dict] = []
-                for item in row_data:
+                for country in countries_info:
 
                     web_data.append(
                         {
-                            "country_name": item["countryName"],
-                            "population": int(item["population"]),
-                            "region": item["continentName"],
+                            "country_name": country["countryName"],
+                            "population": int(country["population"]),
+                            "region": country["continentName"],
                         },
                     )
 
             return web_data
 
     async def get_all_data(self) -> List[CountryInfo]:
-        web_data: Coroutine[Any, Any, List[dict]] = await self.extract_data()
+        web_data: List[dict] = await self.extract_data()
 
         results: List[CountryInfo] = []
         for data in web_data:
@@ -146,7 +146,7 @@ class StatisticsTimes(ParserInterface):
     URL = "https://statisticstimes.com/demographics/countries-by-population.php"
     HEADERS = HEADERS
 
-    async def extract_data(self) -> Coroutine[Any, Any, List[dict]]:
+    async def extract_data(self) -> List[dict]:
         async with ClientSession() as session:
             async with session.get(self.URL, headers=HEADERS) as responce:
                 html_content = await responce.text()
@@ -183,7 +183,7 @@ class StatisticsTimes(ParserInterface):
                 return web_data
 
     async def get_all_data(self) -> List[CountryInfo]:
-        web_data: Coroutine[Any, Any, List[dict]] = await self.extract_data()
+        web_data: List[dict] = await self.extract_data()
 
         results: List[CountryInfo] = []
 

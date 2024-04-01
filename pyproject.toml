@@ -29,3 +29,12 @@ use_parentheses = true
 line_length = 88
 skip = '.venv,venv,env,migrations'
 src_paths = ["src"]
+
+[tool.mypy]
+plugins = [
+    "pydantic.mypy",
+]
+python_version = '3.10'
+files = ['*.py',]
+ignore_missing_imports = true
+

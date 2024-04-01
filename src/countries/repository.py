@@ -12,29 +12,31 @@ class CountriesCRUD(Session):
         super().__init__(dsn)
 
     async def save(self, countries: List[CountryInfo]) -> None:
-        async with self.pool.acquire() as connection:
-            for country in countries:
+        if self.pool is not None:
+            async with self.pool.acquire() as connection:
+                for country in countries:
+                    try:
+                        await connection.execute(
+                            QUERY_LOAD,
+                            country.country_name,
+                            country.population,
+                            country.region,
+                        )
+                        print(f"{country.country_name} has been saved in database\n")
+                    except UniqueViolationError as e:
+                        print(f"{e}")
+
+    async def list(self) -> None:
+        if self.pool is not None:
+            async with self.pool.acquire() as connection:
                 try:
-                    await connection.execute(
-                        QUERY_LOAD,
-                        country.country_name,
-                        country.population,
-                        country.region,
-                    )
-                    print(f"{country.country_name} has been saved in database\n")
-                except UniqueViolationError as e:
-                    print(f"{e}")
+                    results = await connection.fetch(QUERY_FETCH)
+                    regions: List[RegionInfo] = []
+                    for result in results:
+                        data = dict(result)
+                        regions.append(RegionInfo(**data))
 
-    async def list(self):
-        async with self.pool.acquire() as connection:
-            try:
-                results = await connection.fetch(QUERY_FETCH)
-                regions: List[RegionInfo] = []
-                for result in results:
-                    data = dict(result)
-                    regions.append(RegionInfo(**data))
-
-                for region in regions:
-                    print(region.repr())
-            except UndefinedTableError:
-                print(f"Table '{TABLE_NAME}' does not exist. First you should get data, run get_data conteiner!")
+                    for region in regions:
+                        print(region.repr())
+                except UndefinedTableError:
+                    print(f"Table '{TABLE_NAME}' does not exist. First you should get data, run get_data conteiner!")
