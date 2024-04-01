@@ -26,7 +26,7 @@ class CountriesCRUD(Session):
                     except UniqueViolationError as e:
                         print(f"{e}")
 
-    async def list(self) -> None:
+    async def list(self) -> List[RegionInfo]:
         if self.pool is not None:
             async with self.pool.acquire() as connection:
                 try:
@@ -36,7 +36,9 @@ class CountriesCRUD(Session):
                         data = dict(result)
                         regions.append(RegionInfo(**data))
 
-                    for region in regions:
-                        print(region.repr())
+                    return regions
+
                 except UndefinedTableError:
                     print(f"Table '{TABLE_NAME}' does not exist. First you should get data, run get_data conteiner!")
+
+        return []
