@@ -5,9 +5,10 @@ class CountryInfo(BaseModel):
     country_name: str
     population: int
     region: str
+    data_source: str
 
     def __str__(self) -> str:
-        return f"Country {self.country_name}, population: {self.population}, {self.region}"
+        return f"Country {self.country_name}, population: {self.population}, {self.region}, {self.data_source}"
 
 
 class RegionInfo(BaseModel):

@@ -17,15 +17,24 @@ POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", default="postgres")
 
 DSN = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}/{POSTGRES_NAME}"
 
-TABLE_NAME = f"countries_{os.getenv('SOURCE', default='')}"
-
 # ====================
 # parser configuration
 # ====================
+SOURCE = os.getenv("SOURCE", default="")
+
 PARSERS_MAPPING = {
-    "wikipedia": "ParserWiki",
-    "geonames": "GeonamesAPI",
-    "statisticstimes": "StatisticsTimes",
+    "wikipedia": [
+        "ParserWiki",
+        "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_population",
+    ],
+    "geonames": [
+        "GeonamesAPI",
+        "http://api.geonames.org/countryInfoJSON",
+    ],
+    "statisticstimes": [
+        "StatisticsTimes",
+        "https://statisticstimes.com/demographics/countries-by-population.php",
+    ],
 }
 
 HEADERS = {

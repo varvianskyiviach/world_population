@@ -8,13 +8,18 @@ import aiofiles
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup
 
-from config.settings import API_URL, FILE_JSON_PATH, HEADERS, PARAMS
+from config.settings import FILE_JSON_PATH, HEADERS, PARAMS
 from countries.models import CountryInfo
 
 
 class ParserInterface(ABC):
+
     @abstractmethod
-    async def extract_data(self) -> List[dict]:
+    def __init__(self, url_source, data_source) -> None:
+        pass
+
+    @abstractmethod
+    async def _extract_data(self) -> List[dict]:
         pass
 
     @abstractmethod
@@ -23,15 +28,19 @@ class ParserInterface(ABC):
 
 
 class ParserWiki(ParserInterface):
-    URL = "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_population"
-    FILEPATH = FILE_JSON_PATH
+    filepath = FILE_JSON_PATH
+    headers = HEADERS
+
+    def __init__(self, url_source, data_source) -> None:
+        self.url_source = url_source
+        self.data_source = data_source
 
     def similar(self, a: str, b: str) -> float:
         return SequenceMatcher(None, a, b).ratio()
 
-    async def extract_data(self) -> List[dict]:
+    async def _extract_data(self) -> List[dict]:
         async with ClientSession() as session:
-            async with session.get(url=self.URL, headers=HEADERS) as responce:
+            async with session.get(url=self.url_source, headers=self.headers) as responce:
                 html_content = await responce.text()
                 soup = BeautifulSoup(html_content, "html.parser")
 
@@ -65,7 +74,7 @@ class ParserWiki(ParserInterface):
 
                 return web_data
 
-    async def extract_data_additional(self, filepath: Path, web_data: List[dict]) -> List[dict]:
+    async def _extract_data_additional(self, filepath: Path, web_data: List[dict]) -> List[dict]:
 
         async with aiofiles.open(f"{filepath}", mode="r") as file:
             contents = await file.read()
@@ -89,15 +98,16 @@ class ParserWiki(ParserInterface):
 
     async def get_all_data(self) -> List[CountryInfo]:
 
-        web_data: List[dict] = await self.extract_data()
-        additional_data: List[dict] = await self.extract_data_additional(
-            filepath=self.FILEPATH,
+        web_data: List[dict] = await self._extract_data()
+        additional_data: List[dict] = await self._extract_data_additional(
+            filepath=self.filepath,
             web_data=web_data,
         )
 
         results: List[CountryInfo] = []
 
         for main_data in web_data:
+            main_data["data_source"] = self.data_source
             for data in additional_data:
                 if main_data["country_name"] == data["country_name"]:
                     main_data["region"] = data["region"]
@@ -108,12 +118,15 @@ class ParserWiki(ParserInterface):
 
 
 class GeonamesAPI(ParserInterface):
-    URL = API_URL
-    PARAMS = PARAMS
+    params = PARAMS
 
-    async def extract_data(self) -> List[dict]:
+    def __init__(self, url_source, data_source) -> None:
+        self.url_source = url_source
+        self.data_source = data_source
+
+    async def _extract_data(self) -> List[dict]:
         async with ClientSession() as session:
-            async with session.get(self.URL, params=self.PARAMS) as responce:
+            async with session.get(self.url_source, params=self.params) as responce:
 
                 row_data: dict = await responce.json()
                 countries_info: List[dict] = row_data.get("geonames", [])
@@ -132,10 +145,11 @@ class GeonamesAPI(ParserInterface):
             return web_data
 
     async def get_all_data(self) -> List[CountryInfo]:
-        web_data: List[dict] = await self.extract_data()
+        web_data: List[dict] = await self._extract_data()
 
         results: List[CountryInfo] = []
         for data in web_data:
+            data["data_source"] = self.data_source
             if data["population"] > 0:
                 results.append(CountryInfo(**data))
 
@@ -143,12 +157,15 @@ class GeonamesAPI(ParserInterface):
 
 
 class StatisticsTimes(ParserInterface):
-    URL = "https://statisticstimes.com/demographics/countries-by-population.php"
-    HEADERS = HEADERS
+    headers = HEADERS
 
-    async def extract_data(self) -> List[dict]:
+    def __init__(self, url_source, data_source) -> None:
+        self.url_source = url_source
+        self.data_source = data_source
+
+    async def _extract_data(self) -> List[dict]:
         async with ClientSession() as session:
-            async with session.get(self.URL, headers=HEADERS) as responce:
+            async with session.get(self.url_source, headers=self.headers) as responce:
                 html_content = await responce.text()
                 soup = BeautifulSoup(html_content, "html.parser")
 
@@ -183,11 +200,12 @@ class StatisticsTimes(ParserInterface):
                 return web_data
 
     async def get_all_data(self) -> List[CountryInfo]:
-        web_data: List[dict] = await self.extract_data()
+        web_data: List[dict] = await self._extract_data()
 
         results: List[CountryInfo] = []
 
         for data in web_data:
+            data["data_source"] = self.data_source
             if data["population"] > 0:
                 results.append(CountryInfo(**data))
 
