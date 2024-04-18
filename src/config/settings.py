@@ -22,20 +22,6 @@ DSN = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}/{POSTGR
 # ====================
 SOURCE = os.getenv("SOURCE", default="")
 
-PARSERS_MAPPING = {
-    "wikipedia": [
-        "ParserWiki",
-        "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_population",
-    ],
-    "geonames": [
-        "GeonamesAPI",
-        "http://api.geonames.org/countryInfoJSON",
-    ],
-    "statisticstimes": [
-        "StatisticsTimes",
-        "https://statisticstimes.com/demographics/countries-by-population.php",
-    ],
-}
 
 HEADERS = {
     "User-Agent": (

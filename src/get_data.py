@@ -1,7 +1,7 @@
 import asyncio
 from typing import List
 
-from config.settings import DSN, PARSERS_MAPPING, SOURCE
+from config.settings import DSN, SOURCE
 from countries.models import CountryInfo
 from countries.parsers import (  # noqa: F401, F403
     GeonamesAPI,
@@ -9,6 +9,21 @@ from countries.parsers import (  # noqa: F401, F403
     StatisticsTimes,
 )
 from countries.repository import CountriesCRUD
+
+PARSERS_MAPPING = {
+    "wikipedia": [
+        ParserWiki,
+        "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_population",
+    ],
+    "geonames": [
+        GeonamesAPI,
+        "http://api.geonames.org/countryInfoJSON",
+    ],
+    "statisticstimes": [
+        StatisticsTimes,
+        "https://statisticstimes.com/demographics/countries-by-population.php",
+    ],
+}
 
 
 async def get_data(parser) -> List[CountryInfo]:
@@ -27,10 +42,9 @@ async def save_in_db(countries):
 
 async def main():
     data_source = SOURCE
-    parser_name = PARSERS_MAPPING.get(data_source)[0]
-    url_source = PARSERS_MAPPING.get(data_source)[1]
     try:
-        parser_class = globals()[parser_name]
+        parser_class = PARSERS_MAPPING.get(data_source)[0]
+        url_source = PARSERS_MAPPING.get(data_source)[1]
         parser = parser_class(url_source, data_source)
         result = await get_data(parser)
     except KeyError:
